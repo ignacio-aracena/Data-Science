@@ -1,4 +1,5 @@
 # TP1 — Clasificación del Dataset Iris
+
 ### Ignacio Aracena · Tomás Arizu | Ciencia de Datos — UdeSA
 
 ---
@@ -8,6 +9,7 @@
 Este trabajo práctico analiza el dataset Iris con el objetivo de clasificar tres especies de flores (*Iris setosa*, *Iris versicolor* e *Iris virginica*) a partir de cuatro variables morfológicas. El trabajo sigue una estructura progresiva e intencionada: cada decisión —qué features crear, qué modelos probar, qué hiperparámetros buscar— se justifica a partir de lo que el análisis previo reveló. No se elige un modelo al azar y se reporta su accuracy: se construye entendimiento del problema desde los datos, y ese entendimiento guía cada paso del modelado.
 
 Los hallazgos principales son:
+
 - *Setosa* es **perfectamente separable** del resto con cualquier modelo — sus pétalos son tan pequeños que no hay superposición con las otras dos especies.
 - El par difícil es **versicolor vs virginica**, cuyo solapamiento tiene una explicación histórica (orígenes de recolección distintos) y no solo biológica.
 - El **feature engineering basado en el pétalo** es el factor que más mejora el rendimiento: pasar de 4 variables originales a 4 variables derivadas del pétalo sube la accuracy de 90% a 96.67%.
@@ -58,12 +60,14 @@ El EDA no es un paso decorativo: es donde se construye la intuición que guía *
 
 ### 2.1 Estadísticas descriptivas
 
-| Variable | Media | Std | Min | Max |
-|---|---|---|---|---|
-| longitud_sepalo | 5.84 cm | 0.83 | 4.3 | 7.9 |
-| ancho_sepalo | 3.06 cm | 0.44 | 2.0 | 4.4 |
+
+| Variable        | Media   | Std      | Min | Max |
+| --------------- | ------- | -------- | --- | --- |
+| longitud_sepalo | 5.84 cm | 0.83     | 4.3 | 7.9 |
+| ancho_sepalo    | 3.06 cm | 0.44     | 2.0 | 4.4 |
 | longitud_petalo | 3.76 cm | **1.77** | 1.0 | 6.9 |
-| ancho_petalo | 1.20 cm | **0.76** | 0.1 | 2.5 |
+| ancho_petalo    | 1.20 cm | **0.76** | 0.1 | 2.5 |
+
 
 La primera señal aparece acá: las variables del pétalo tienen una desviación estándar mucho mayor (1.77 y 0.76) que las del sépalo (0.83 y 0.44). Mayor varianza entre muestras implica más información disponible para discriminar entre clases. Esto anticipa que el pétalo será más útil que el sépalo para clasificar, hipótesis que se confirma en cada análisis subsiguiente.
 
@@ -75,9 +79,9 @@ La primera señal aparece acá: las variables del pétalo tienen una desviación
 
 Al graficar la distribución de cada variable separada por especie, emerge el patrón central del dataset:
 
-- **`longitud_petalo`**: distribución marcadamente bimodal. *Setosa* se concentra entre 1 y 2 cm. *Versicolor* y *virginica* se distribuyen entre 3 y 7 cm con solapamiento en la zona 4.5–5.5 cm.
-- **`ancho_petalo`**: mismo patrón. *Setosa* en 0.1–0.6 cm; las otras dos en valores más altos con solapamiento.
-- **`longitud_sepalo`** y **`ancho_sepalo`**: las tres especies se superponen significativamente. Estas variables solas no permiten distinguir bien las clases.
+- `**longitud_petalo*`*: distribución marcadamente bimodal. *Setosa* se concentra entre 1 y 2 cm. *Versicolor* y *virginica* se distribuyen entre 3 y 7 cm con solapamiento en la zona 4.5–5.5 cm.
+- `**ancho_petalo*`*: mismo patrón. *Setosa* en 0.1–0.6 cm; las otras dos en valores más altos con solapamiento.
+- `**longitud_sepalo*`* y `**ancho_sepalo**`: las tres especies se superponen significativamente. Estas variables solas no permiten distinguir bien las clases.
 
 **Conclusión del EDA hasta acá**: las variables del pétalo son mucho más informativas que las del sépalo. Esta observación va a motivar directamente los experimentos 3 (solo pétalo) y 4 (solo binarias del pétalo) en la sección de modelado.
 
@@ -85,12 +89,14 @@ Al graficar la distribución de cada variable separada por especie, emerge el pa
 
 Al graficar pares de variables coloreados por especie, la separabilidad se vuelve visual y concreta:
 
-| Par de variables | Observación |
-|---|---|
-| longitud_petalo vs ancho_petalo | **Combinación más separable.** *Setosa* perfectamente aislada en la esquina inferior izquierda. *Versicolor* y *virginica* separadas pero con solapamiento en la región 4–5 cm. |
-| longitud_sepalo vs ancho_sepalo | Máximo solapamiento entre las tres especies. La combinación menos útil para clasificación. |
-| longitud_sepalo vs longitud_petalo | *Setosa* aislada, pero versicolor y virginica se confunden. |
-| ancho_sepalo vs ancho_petalo | Ídem anterior. |
+
+| Par de variables                   | Observación                                                                                                                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| longitud_petalo vs ancho_petalo    | **Combinación más separable.** *Setosa* perfectamente aislada en la esquina inferior izquierda. *Versicolor* y *virginica* separadas pero con solapamiento en la región 4–5 cm. |
+| longitud_sepalo vs ancho_sepalo    | Máximo solapamiento entre las tres especies. La combinación menos útil para clasificación.                                                                                      |
+| longitud_sepalo vs longitud_petalo | *Setosa* aislada, pero versicolor y virginica se confunden.                                                                                                                     |
+| ancho_sepalo vs ancho_petalo       | Ídem anterior.                                                                                                                                                                  |
+
 
 **Conclusión**: el par longitud/ancho del pétalo es la combinación más discriminativa. La separación de *setosa* es tan marcada que cualquier umbral simple en el pétalo la identifica. El desafío real es la frontera entre versicolor y virginica.
 
@@ -104,6 +110,7 @@ Los boxplots confirman los scatter plots y agregan información sobre variabilid
 ### 2.6 Matrices de correlación
 
 **Correlación global:**
+
 - `longitud_petalo` ↔ `ancho_petalo`: correlación ~0.96 — altamente redundantes.
 - `longitud_petalo` ↔ `longitud_sepalo`: correlación ~0.87.
 - Variables del sépalo entre sí: correlación baja (~-0.11).
@@ -114,13 +121,15 @@ Las correlaciones cambian significativamente entre especies. Por ejemplo, la cor
 
 ### Síntesis del EDA — ¿Qué aprendimos y cómo lo usamos?
 
-| Hallazgo del EDA | Decisión que motiva |
-|---|---|
-| Variables del pétalo tienen mayor varianza y separabilidad | Diseñar features centradas en el pétalo |
-| *Setosa* tiene pétalo muy pequeño (< 2 cm de longitud) | Crear variables binarias con ese umbral |
-| Alta correlación entre longitud y ancho del pétalo (0.96) | Crear features que combinen ambas (área, suma, diferencia) |
-| Correlaciones diferentes por especie | Crear ratios que capturen proporciones relativas |
-| Solapamiento versicolor/virginica siempre presente | Esperar que ningún modelo los separe perfectamente |
+
+| Hallazgo del EDA                                           | Decisión que motiva                                        |
+| ---------------------------------------------------------- | ---------------------------------------------------------- |
+| Variables del pétalo tienen mayor varianza y separabilidad | Diseñar features centradas en el pétalo                    |
+| *Setosa* tiene pétalo muy pequeño (< 2 cm de longitud)     | Crear variables binarias con ese umbral                    |
+| Alta correlación entre longitud y ancho del pétalo (0.96)  | Crear features que combinen ambas (área, suma, diferencia) |
+| Correlaciones diferentes por especie                       | Crear ratios que capturen proporciones relativas           |
+| Solapamiento versicolor/virginica siempre presente         | Esperar que ningún modelo los separe perfectamente         |
+
 
 ---
 
@@ -137,22 +146,26 @@ Importante: escalamos los datos con `StandardScaler` **antes** de aplicar PCA. P
 
 ### Varianza explicada
 
+
 | Componente | Varianza individual | Acumulada |
-|---|---|---|
-| PC1 | ~73% | ~73% |
-| PC2 | ~23% | **~96%** |
-| PC3 | ~3.7% | ~99.5% |
-| PC4 | ~0.5% | 100% |
+| ---------- | ------------------- | --------- |
+| PC1        | ~73%                | ~73%      |
+| PC2        | ~23%                | **~96%**  |
+| PC3        | ~3.7%               | ~99.5%    |
+| PC4        | ~0.5%               | 100%      |
+
 
 Con solo **2 componentes se captura el 95.8% de la varianza total**. Esto significa que casi toda la información del dataset vive en un espacio de 2 dimensiones, aunque las variables originales sean 4.
 
 **¿Qué representa cada componente?**
+
 - **PC1** (73% de varianza): dominada por las variables del pétalo. Esencialmente mide el "tamaño del pétalo" — valores negativos = pétalo pequeño (*setosa*), valores positivos = pétalo grande (*versicolor* y *virginica*).
 - **PC2** (23% de varianza): captura variación adicional, principalmente en las variables del sépalo. Permite distinguir parcialmente versicolor de virginica.
 
 ### Visualización 2D
 
 La proyección en 2D confirma y sintetiza todo lo del EDA en un solo gráfico:
+
 - *Setosa*: cluster perfectamente aislado en el extremo izquierdo (pétalo pequeño → PC1 muy negativa).
 - *Versicolor* y *virginica*: separadas en la dirección de PC2, pero con solapamiento en la zona de transición.
 
@@ -165,6 +178,7 @@ Este gráfico es la evidencia más directa de que el dataset es **parcialmente s
 ### ¿Por qué hacer feature engineering?
 
 El EDA mostró que:
+
 - Las variables originales del pétalo son discriminativas pero tienen alta correlación entre sí (0.96).
 - Las correlaciones entre variables varían por especie, sugiriendo que las combinaciones entre variables pueden capturar información que las variables individuales no capturan.
 - Existen umbrales simples en el pétalo que permiten identificar directamente a *setosa*.
@@ -175,47 +189,47 @@ El feature engineering es la respuesta directa a estos hallazgos: creamos nuevas
 
 Partiendo de las 4 variables originales, creamos 11 nuevas features, llegando a **15 en total**:
 
-| Tipo | Variable | Fórmula | Motivación |
-|---|---|---|---|
-| Ratio | `ratio_petalo` | longitud / ancho (pétalo) | Captura la proporción, independiente del tamaño absoluto |
-| Ratio | `ratio_sepalo` | longitud / ancho (sépalo) | Ídem para el sépalo |
-| Binaria | `es_petalo_pequeno` | 1 si longitud_petalo < 2.0 cm | Umbral observado en EDA que separa *setosa* del resto |
-| Binaria | `es_ancho_petalo_pequeno` | 1 si ancho_petalo < 0.6 cm | Ídem, segunda condición que aísla a *setosa* |
-| Área | `area_petalo` | longitud × ancho (pétalo) | Tamaño total del pétalo — captura la interacción entre dimensiones |
-| Área | `area_sepalo` | longitud × ancho (sépalo) | Ídem para el sépalo |
-| Polinómica | `longitud_petalo_2` | longitud_petalo² | Captura relaciones no lineales en la longitud |
-| Polinómica | `ancho_petalo_2` | ancho_petalo² | Ídem para el ancho |
-| Combinación lineal | `diff_petalo` | longitud − ancho (pétalo) | Mide si el pétalo es alargado o cuadrado |
-| Combinación lineal | `diff_sepalo` | longitud − ancho (sépalo) | Ídem para el sépalo |
-| Combinación lineal | `suma_petalo` | longitud + ancho (pétalo) | Tamaño total aproximado (alternativa al área) |
+
+| Tipo               | Variable                  | Fórmula                       | Motivación                                                         |
+| ------------------ | ------------------------- | ----------------------------- | ------------------------------------------------------------------ |
+| Ratio              | `ratio_petalo`            | longitud / ancho (pétalo)     | Captura la proporción, independiente del tamaño absoluto           |
+| Ratio              | `ratio_sepalo`            | longitud / ancho (sépalo)     | Ídem para el sépalo                                                |
+| Binaria            | `es_petalo_pequeno`       | 1 si longitud_petalo < 2.0 cm | Umbral observado en EDA que separa *setosa* del resto              |
+| Binaria            | `es_ancho_petalo_pequeno` | 1 si ancho_petalo < 0.6 cm    | Ídem, segunda condición que aísla a *setosa*                       |
+| Área               | `area_petalo`             | longitud × ancho (pétalo)     | Tamaño total del pétalo — captura la interacción entre dimensiones |
+| Área               | `area_sepalo`             | longitud × ancho (sépalo)     | Ídem para el sépalo                                                |
+| Polinómica         | `longitud_petalo_2`       | longitud_petalo²              | Captura relaciones no lineales en la longitud                      |
+| Polinómica         | `ancho_petalo_2`          | ancho_petalo²                 | Ídem para el ancho                                                 |
+| Combinación lineal | `diff_petalo`             | longitud − ancho (pétalo)     | Mide si el pétalo es alargado o cuadrado                           |
+| Combinación lineal | `diff_sepalo`             | longitud − ancho (sépalo)     | Ídem para el sépalo                                                |
+| Combinación lineal | `suma_petalo`             | longitud + ancho (pétalo)     | Tamaño total aproximado (alternativa al área)                      |
+
 
 **Por qué cada tipo de feature tiene sentido:**
 
 - **Ratios**: dos flores pueden tener el mismo largo de pétalo pero distinto ancho. El ratio captura la "forma" del pétalo independientemente de su tamaño. Un *setosa* con pétalo corto y ancho tiene un ratio diferente a una *versicolor* con pétalo largo y delgado.
-
 - **Binarias**: si en el EDA observamos que *setosa* siempre tiene `longitud_petalo < 2.0`, crear `es_petalo_pequeno = 1` codifica esa regla directamente como feature. El modelo ya no tiene que "descubrir" ese umbral — se lo damos explícito.
-
 - **Áreas**: la correlación de 0.96 entre longitud y ancho del pétalo sugiere que ambas variables miden cosas similares. El área (`longitud × ancho`) las combina en una sola variable con significado geométrico claro: es el tamaño total del pétalo. Esta combinación puede ser más informativa que cada dimensión por separado porque captura la interacción entre ambas.
-
 - **Polinómicas**: si la frontera de decisión entre versicolor y virginica no es lineal en el espacio original, elevar al cuadrado puede ayudar a capturar esa curvatura. Es una forma de permitir que modelos lineales se comporten como no lineales.
-
 - **Combinaciones lineales**: la diferencia entre longitud y ancho captura si el pétalo es alargado o cuadrado, una característica que las dimensiones individuales no expresan directamente.
 
 ### ¿Qué tan útiles resultaron estas features?
 
 La importancia de features del Random Forest entrenado con las 15 variables lo confirma:
 
-| Posición | Feature | Importancia | Tipo |
-|---|---|---|---|
-| 1 | `area_petalo` | 16.8% | Área |
-| 2 | `ancho_petalo_2` | 13.3% | Polinómica |
-| 3 | `suma_petalo` | 12.1% | Combinación lineal |
-| 4 | `ancho_petalo` | 12.0% | Original |
-| 5 | `longitud_petalo` | 11.4% | Original |
-| 6 | `longitud_petalo_2` | 10.6% | Polinómica |
-| 7 | `diff_petalo` | 6.0% | Combinación lineal |
-| 8 | `es_petalo_pequeno` | 6.0% | Binaria |
-| 9 | `diff_sepalo` | 5.4% | Combinación lineal |
+
+| Posición | Feature             | Importancia | Tipo               |
+| -------- | ------------------- | ----------- | ------------------ |
+| 1        | `area_petalo`       | 16.8%       | Área               |
+| 2        | `ancho_petalo_2`    | 13.3%       | Polinómica         |
+| 3        | `suma_petalo`       | 12.1%       | Combinación lineal |
+| 4        | `ancho_petalo`      | 12.0%       | Original           |
+| 5        | `longitud_petalo`   | 11.4%       | Original           |
+| 6        | `longitud_petalo_2` | 10.6%       | Polinómica         |
+| 7        | `diff_petalo`       | 6.0%        | Combinación lineal |
+| 8        | `es_petalo_pequeno` | 6.0%        | Binaria            |
+| 9        | `diff_sepalo`       | 5.4%        | Combinación lineal |
+
 
 Las 9 features con importancia > 5% son **todas derivadas del pétalo o combinaciones que lo incluyen**. Las variables del sépalo puras (`longitud_sepalo`, `ancho_sepalo`) quedan por debajo del 5% de importancia. Esto valida retrospectivamente la hipótesis del EDA: el sépalo no agrega información discriminativa relevante una vez que el pétalo está bien representado.
 
@@ -229,8 +243,8 @@ Las features creadas (área, polinómicas, sumas) ocupan los primeros puestos po
 
 Dividimos el dataset en **80% entrenamiento (120 muestras) y 20% prueba (30 muestras)**. Dos decisiones técnicas que garantizan la validez de las comparaciones:
 
-- **`stratify=y`**: garantiza que la proporción de clases sea idéntica en train y test. Sin esto, el split podría quedar desbalanceado por azar. Con stratify: train tiene 40/40/40 y test tiene 10/10/10.
-- **`random_state=42` igual en todos los experimentos**: garantiza que todos los modelos se evalúan sobre **exactamente el mismo conjunto de test**. Si usáramos semillas distintas, los modelos verían conjuntos de test distintos y no sería una comparación justa.
+- `**stratify=y`**: garantiza que la proporción de clases sea idéntica en train y test. Sin esto, el split podría quedar desbalanceado por azar. Con stratify: train tiene 40/40/40 y test tiene 10/10/10.
+- `**random_state=42` igual en todos los experimentos**: garantiza que todos los modelos se evalúan sobre **exactamente el mismo conjunto de test**. Si usáramos semillas distintas, los modelos verían conjuntos de test distintos y no sería una comparación justa.
 
 ### Elección de métricas y justificación de la prioridad
 
@@ -255,13 +269,15 @@ Aunque accuracy es la métrica principal, F1-macro actúa como verificación. El
 
 **Resumen de criterios para elegir métricas en clasificación:**
 
-| Situación | Métrica recomendada |
-|---|---|
-| Clases balanceadas, errores simétricos | Accuracy |
-| Clases desbalanceadas | F1-macro o F1-weighted |
-| Costo alto de Falsos Negativos (ej: diagnóstico) | Recall |
-| Costo alto de Falsos Positivos (ej: spam) | Precision |
-| Evaluación de capacidad discriminativa por clase | AUC-ROC |
+
+| Situación                                        | Métrica recomendada    |
+| ------------------------------------------------ | ---------------------- |
+| Clases balanceadas, errores simétricos           | Accuracy               |
+| Clases desbalanceadas                            | F1-macro o F1-weighted |
+| Costo alto de Falsos Negativos (ej: diagnóstico) | Recall                 |
+| Costo alto de Falsos Positivos (ej: spam)        | Precision              |
+| Evaluación de capacidad discriminativa por clase | AUC-ROC                |
+
 
 En este TP, las condiciones del primer caso se cumplen. Accuracy es la elección correcta, respaldada por F1-macro para detectar comportamientos anómalos por clase.
 
@@ -269,13 +285,15 @@ En este TP, las condiciones del primer caso se cumplen. Accuracy es la elección
 
 Los 11 experimentos no son arbitrarios. Siguen una lógica progresiva basada en los hallazgos del EDA y el feature engineering:
 
-| Grupo | Experimentos | Pregunta que responden |
-|---|---|---|
-| **Referencia** | RF Baseline | ¿Qué accuracy se logra sin ningún feature engineering? |
-| **Impacto del FE** | RF Todas, RF Solo pétalo, RF Solo binarias, RF Orig+Ratios | ¿Cuánto aporta cada tipo de feature? ¿Cuáles son prescindibles? |
-| **Algoritmo distinto** | KNN Pipeline | ¿Un algoritmo basado en distancias hace mejor o peor que uno basado en árboles? |
-| **Boosting** | Gradient Boosting, AdaBoost, XGBoost | ¿Los métodos de boosting superan al Random Forest? |
-| **Pipeline complejo** | RF→GB tuneado, PCA→GB | ¿Combinar selección/reducción + tuneo mejora los resultados? |
+
+| Grupo                  | Experimentos                                               | Pregunta que responden                                                          |
+| ---------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Referencia**         | RF Baseline                                                | ¿Qué accuracy se logra sin ningún feature engineering?                          |
+| **Impacto del FE**     | RF Todas, RF Solo pétalo, RF Solo binarias, RF Orig+Ratios | ¿Cuánto aporta cada tipo de feature? ¿Cuáles son prescindibles?                 |
+| **Algoritmo distinto** | KNN Pipeline                                               | ¿Un algoritmo basado en distancias hace mejor o peor que uno basado en árboles? |
+| **Boosting**           | Gradient Boosting, AdaBoost, XGBoost                       | ¿Los métodos de boosting superan al Random Forest?                              |
+| **Pipeline complejo**  | RF→GB tuneado, PCA→GB                                      | ¿Combinar selección/reducción + tuneo mejora los resultados?                    |
+
 
 ### Escalado explícito de datos
 
@@ -292,6 +310,7 @@ Para los experimentos de KNN y PCA→GB, el escalado y la reducción dimensional
 **¿Por qué empezar con Random Forest?** Es un modelo robusto, no requiere escalado de variables, maneja bien correlaciones entre features, y provee importancia de features que usaremos más adelante. Es el candidato natural para baseline.
 
 **Resultados:**
+
 - Accuracy: **90.0%** | F1-macro: **89.97%**
 - Tiempo entrenamiento: 51.2ms | Tiempo predicción: 1.98ms
 - *Setosa*: FP=0, FN=0 (clasificada perfectamente, como predijo el EDA)
@@ -310,6 +329,7 @@ El 10% de error que queda es la motivación para el siguiente experimento: ¿pue
 **Setup:** Mismo RF, ahora con las 15 features (originales + engineered).
 
 **Resultados:**
+
 - Accuracy: **96.67%** | F1-macro: **96.66%**
 - Tiempo entrenamiento: 52.3ms | Tiempo predicción: 2.63ms
 - *Setosa*: FP=0, FN=0
@@ -330,6 +350,7 @@ Ahora surge la siguiente pregunta: ¿**todas** las 15 features contribuyen al re
 **Motivación:** El EDA mostró que el sépalo tiene menor poder discriminativo. La importancia de features del experimento 2 confirmó que las variables del sépalo no llegan al 5% de importancia. ¿Podemos lograr el mismo resultado sin ellas?
 
 **Resultados:**
+
 - Accuracy: **96.67%** | F1-macro: **96.66%**
 - Tiempo entrenamiento: 49.8ms
 
@@ -346,6 +367,7 @@ Este resultado también tiene implicaciones prácticas: si quisiéramos aplicar 
 **Motivación:** Las variables binarias fueron diseñadas para identificar directamente a *setosa*. Sirven como experimento límite: ¿qué pasa si solo usamos las reglas más simples que el EDA sugirió?
 
 **Resultados:**
+
 - Accuracy: **66.67%** | F1-macro: **55.56%**
 - *Setosa*: FP=0, FN=0 (identificada perfectamente, como se esperaba)
 - *Versicolor*: FP=0, FN=10 — **el modelo no predice ninguna *versicolor* correctamente**
@@ -362,6 +384,7 @@ F1-macro de 55% es engañoso en este caso: el modelo tiene 100% de accuracy para
 **Setup:** RF con las 4 variables originales más los 2 ratios (6 features en total).
 
 **Resultados:**
+
 - Accuracy: **93.33%** | F1-macro: **93.33%**
 - **Total errores: 2 sobre 30 muestras**
 
@@ -377,18 +400,21 @@ F1-macro de 55% es engañoso en este caso: el modelo tiene 100% de accuracy para
 
 **Selección de k:**
 
-| k | Accuracy (CV 5-fold) |
-|---|---|
-| 1 | 0.9417 |
-| 3 | 0.9583 |
-| **5** | **0.9667** |
-| 7 | 0.9583 |
-| 9 | 0.9583 |
-| 11 | 0.9583 |
+
+| k     | Accuracy (CV 5-fold) |
+| ----- | -------------------- |
+| 1     | 0.9417               |
+| 3     | 0.9583               |
+| **5** | **0.9667**           |
+| 7     | 0.9583               |
+| 9     | 0.9583               |
+| 11    | 0.9583               |
+
 
 k=1 overfittea (cada punto es su propio vecino más cercano). k=5 es el óptimo: suficientemente robusto para generalizar sin perder sensibilidad.
 
 **Resultados con k=5:**
+
 - Accuracy: **93.33%** | F1-macro: **93.27%**
 - Tiempo entrenamiento: **1.6ms** — el más rápido de todos los modelos
 - *Versicolor*: FP=2, FN=0
@@ -408,6 +434,7 @@ El resultado del KNN es comparable al RF baseline pero inferior al RF con featur
 **¿Cómo funciona el Gradient Boosting?** Construye árboles secuencialmente: cada árbol nuevo se ajusta para corregir los errores residuales del conjunto anterior. Es conceptualmente diferente al Random Forest (que construye árboles independientes en paralelo y promedia sus predicciones). El boosting tiende a tener menor sesgo pero mayor riesgo de overfitting.
 
 **Resultados:**
+
 - Accuracy: **96.67%** | F1-macro: **96.66%**
 - Tiempo entrenamiento: 124.5ms — más del doble que el RF
 - *Setosa*: FP=0, FN=0
@@ -426,6 +453,7 @@ El resultado del KNN es comparable al RF baseline pero inferior al RF con featur
 **¿Cómo difiere del Gradient Boosting?** AdaBoost usa árboles muy simples (stumps de 1 nivel) como estimadores base, y pondera las muestras: las mal clasificadas reciben más peso en la iteración siguiente. El Gradient Boosting usa árboles más profundos y ajusta los residuos directamente.
 
 **Resultados:**
+
 - Accuracy: **93.33%** | F1-macro: **93.33%**
 - Tiempo predicción: 3.94ms — el más lento en predicción
 - *Versicolor*: FP=1, FN=1 | *Virginica*: FP=1, FN=1
@@ -442,6 +470,7 @@ El resultado del KNN es comparable al RF baseline pero inferior al RF con featur
 **¿Qué hace diferente XGBoost?** Es una implementación optimizada de Gradient Boosting con regularización adicional (L1 y L2 sobre los pesos de los árboles), paralelización y manejo eficiente de datos dispersos. En datasets grandes es significativamente más rápido que sklearn.
 
 **Resultados:**
+
 - Accuracy: **93.33%** | F1-macro: **93.33%**
 - Tiempo predicción: 1.63ms — el más rápido en predicción
 - **Total errores: 2 sobre 30 muestras**
@@ -462,16 +491,19 @@ Se filtran las features con importancia > 5% según el experimento 2. Resultado:
 
 **Paso 2 — Búsqueda de hiperparámetros con `StratifiedKFold` (5 folds):**
 
+
 | n_estimators | learning_rate | max_depth | F1-macro (CV 5-fold) |
-|---|---|---|---|
-| **50** | **0.10** | **2** | **0.9582** |
-| 100 | 0.10 | 3 | 0.9582 |
-| 150 | 0.05 | 3 | 0.9582 |
-| 200 | 0.05 | 4 | 0.9496 |
+| ------------ | ------------- | --------- | -------------------- |
+| **50**       | **0.10**      | **2**     | **0.9582**           |
+| 100          | 0.10          | 3         | 0.9582               |
+| 150          | 0.05          | 3         | 0.9582               |
+| 200          | 0.05          | 4         | 0.9496               |
+
 
 Las tres primeras combinaciones empatan en 0.9582. Se elige `n_estimators=50` porque con menos árboles se obtiene el mismo resultado — más simple y más rápido de entrenar. Es el principio de parsimonia aplicado al tuneo de hiperparámetros.
 
 **Paso 3 — Modelo final:**
+
 - Accuracy: **93.33%** | F1-macro: **93.33%**
 - Tiempo entrenamiento: 36ms
 - **Total errores: 2 sobre 30 muestras**
@@ -487,6 +519,7 @@ Las tres primeras combinaciones empatan en 0.9582. Se elige `n_estimators=50` po
 **Motivación:** El PCA mostró que 2 componentes capturan el 95.8% de la varianza. ¿Es suficiente ese 95.8% para clasificar bien, o el 4.2% restante contiene información crítica?
 
 **Resultados:**
+
 - Accuracy: **86.67%** | F1-macro: **86.67%**
 - Tiempo entrenamiento: 156.1ms
 - *Versicolor*: FP=2, FN=2 | *Virginica*: FP=2, FN=2
@@ -529,21 +562,24 @@ El AUC como complemento a la accuracy es valioso porque mide la capacidad de dis
 
 ## 8. Tabla Comparativa Final
 
-| # | Modelo | Features | N° feat. | Accuracy | F1-macro | T. train | T. pred | Interpretabilidad |
-|---|---|---|---|---|---|---|---|---|
-| 1 | RF Todas features | todas (15) | 15 | **0.9667** | **0.9666** | 47ms | 2.2ms | Media |
-| 2 | RF Solo pétalo | petalo (4) | 4 | **0.9667** | **0.9666** | 46ms | 1.8ms | Media |
-| 3 | Gradient Boosting | todas (15) | 15 | **0.9667** | **0.9666** | 122ms | 1.0ms | Baja |
-| 4 | RF Orig + Ratios | orig + ratios (6) | 6 | 0.9333 | 0.9333 | 46ms | 1.8ms | Media |
-| 5 | AdaBoost | todas (15) | 15 | 0.9333 | 0.9333 | 55ms | 4.0ms | Baja |
-| 6 | XGBoost | todas (15) | 15 | 0.9333 | 0.9333 | 71ms | 1.3ms | Baja |
-| 7 | RF→GB tuneado | top features (9) | 9 | 0.9333 | 0.9333 | 36ms | 0.7ms | Baja |
-| 8 | KNN (k=5) | originales (4) | 4 | 0.9333 | 0.9327 | **0.5ms** | 1.6ms | Alta |
-| 9 | RF Baseline | originales (4) | 4 | 0.9000 | 0.8997 | 46ms | 1.8ms | Media |
-| 10 | PCA + GB | PCA 2 componentes | 2 | 0.8667 | 0.8667 | 90ms | 0.5ms | Muy baja |
-| 11 | RF Solo binarias | binarias (2) | 2 | 0.6667 | 0.5556 | 45ms | 1.8ms | Alta |
+
+| #   | Modelo            | Features          | N° feat. | Accuracy   | F1-macro   | T. train  | T. pred | Interpretabilidad |
+| --- | ----------------- | ----------------- | -------- | ---------- | ---------- | --------- | ------- | ----------------- |
+| 1   | RF Todas features | todas (15)        | 15       | **0.9667** | **0.9666** | 47ms      | 2.2ms   | Media             |
+| 2   | RF Solo pétalo    | petalo (4)        | 4        | **0.9667** | **0.9666** | 46ms      | 1.8ms   | Media             |
+| 3   | Gradient Boosting | todas (15)        | 15       | **0.9667** | **0.9666** | 122ms     | 1.0ms   | Baja              |
+| 4   | RF Orig + Ratios  | orig + ratios (6) | 6        | 0.9333     | 0.9333     | 46ms      | 1.8ms   | Media             |
+| 5   | AdaBoost          | todas (15)        | 15       | 0.9333     | 0.9333     | 55ms      | 4.0ms   | Baja              |
+| 6   | XGBoost           | todas (15)        | 15       | 0.9333     | 0.9333     | 71ms      | 1.3ms   | Baja              |
+| 7   | RF→GB tuneado     | top features (9)  | 9        | 0.9333     | 0.9333     | 36ms      | 0.7ms   | Baja              |
+| 8   | KNN (k=5)         | originales (4)    | 4        | 0.9333     | 0.9327     | **0.5ms** | 1.6ms   | Alta              |
+| 9   | RF Baseline       | originales (4)    | 4        | 0.9000     | 0.8997     | 46ms      | 1.8ms   | Media             |
+| 10  | PCA + GB          | PCA 2 componentes | 2        | 0.8667     | 0.8667     | 90ms      | 0.5ms   | Muy baja          |
+| 11  | RF Solo binarias  | binarias (2)      | 2        | 0.6667     | 0.5556     | 45ms      | 1.8ms   | Alta              |
+
 
 **Escala de interpretabilidad:**
+
 - **Alta**: el razonamiento del modelo es directamente explicable (KNN: "clasifiqué por los 5 vecinos más cercanos"; binarias: "si longitud_petalo < 2, es setosa").
 - **Media**: el modelo es una caja gris — se puede analizar con importancia de features, pero no se puede trazar el camino de decisión para cada muestra (Random Forest).
 - **Baja**: los modelos de boosting combinan cientos de árboles secuenciales. La importancia de features existe pero el razonamiento global es opaco.
@@ -605,8 +641,11 @@ El modelo más complejo (Pipeline RF→GB tuneado) logra el mismo resultado con 
 
 ## Archivos del proyecto
 
-| Archivo | Descripción |
-|---|---|
-| `Iris_tp1.ipynb` | Notebook principal con todo el análisis y código ejecutado |
-| `README.md` | Informe completo del trabajo práctico (este archivo) |
-| `README_codigo.md` | Explicación técnica bloque por bloque del notebook |
+
+| Archivo            | Descripción                                                |
+| ------------------ | ---------------------------------------------------------- |
+| `Iris_tp1.ipynb`   | Notebook principal con todo el análisis y código ejecutado |
+| `README.md`        | Informe completo del trabajo práctico (este archivo)       |
+| `README_codigo.md` | Explicación técnica bloque por bloque del notebook         |
+
+
