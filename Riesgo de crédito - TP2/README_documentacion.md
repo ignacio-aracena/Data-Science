@@ -28,7 +28,7 @@
 
 ## Índice de Celdas
 
-> 53 celdas en total (26 markdown + 27 código). Cada celda de código es seguida por una celda markdown
+> 53 celdas en total (31 markdown + 22 código). Cada celda de código es seguida por una celda markdown
 > con el resultado e interpretación inmediatamente debajo.
 
 | # | ID | Tipo | Contenido |
